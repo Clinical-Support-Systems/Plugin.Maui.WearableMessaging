@@ -77,6 +77,49 @@ public class MainViewModel
 }
 ```
 
+## Simulator / Loopback Development Mode (iOS)
+
+When iterating quickly on UI / business logic you may not yet have a paired Apple Watch app running (or you simply want instant turnaround without launching the watch simulator). A lightweight in‑process loopback implementation (`LoopbackWearableMessaging`) is included to short‑circuit all transport calls.
+
+### What It Does
+- Pretends the wearable is installed, paired, and reachable
+- Immediately echoes request/reply messages (adds `"_reply":"ok"`)
+- Raises `MessageReceived` for any outbound message you send
+- Fires `ApplicationContextChanged` and `FileTransferCompleted` instantly
+
+### What It Does NOT Simulate
+- Real `WatchConnectivity` reachability transitions
+- Background delivery / timing constraints
+- Payload size limits or throttling
+- Actual watch app install/uninstall state
+
+### Conditional Registration Example
+Register the loopback only on iOS Simulator in DEBUG; use the real implementation elsewhere:
+
+```csharp
+builder
+    .UseMauiApp<App>()
+#if DEBUG && IOS && TARGET_SIMULATOR
+    .ConfigureServices(services =>
+    {
+        services.AddSingleton<IWearableMessaging, LoopbackWearableMessaging>();
+    })
+#else
+    .UseWearableMessaging(o =>
+    {
+        o.DefaultReplyTimeout = TimeSpan.FromSeconds(30);
+        o.EnableDebugLogging = true;
+    })
+#endif
+```
+
+### When to Switch to Real Devices
+Move to a paired simulator (iPhone + Watch) or physical hardware before validating:
+- Connectivity edge cases (unreachable / re-connect scenarios)
+- Background wake / delayed delivery
+- Larger payload or file transfer behavior
+- Performance & battery impact
+
 ## Platform Setup
 
 ### iOS (Apple Watch)
