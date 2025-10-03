@@ -10,13 +10,7 @@ namespace MauiSample
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-#if DEBUG && IOS && TARGET_SIMULATOR
-                // Use in-process loopback during iOS simulator debugging to avoid needing a watch app.
-                .ConfigureServices(services =>
-                {
-                    services.AddSingleton<IWearableMessaging, LoopbackWearableMessaging>();
-                })
-#else
+#if RELEASE
                 .UseWearableMessaging(options =>
                 {
                     options.DefaultReplyTimeout = TimeSpan.FromSeconds(30);
@@ -31,6 +25,9 @@ namespace MauiSample
 
 #if DEBUG
     		builder.Logging.AddDebug();
+
+            // Use the loopback implementation for local development and testing
+            builder.Services.AddSingleton<IWearableMessaging, LoopbackWearableMessaging>();
 #endif
 
             return builder.Build();
