@@ -1,12 +1,11 @@
 ﻿using Plugin.Maui.WearableMessaging;
-using static AndroidX.ConstraintLayout.Core.Motion.Utils.HyperSpline;
 
 namespace MauiSample
 {
     public partial class MainPage : ContentPage
     {
         private readonly IWearableMessaging _wearableMessaging;
-        int count = 0;
+        private int _count;
 
         public MainPage(IWearableMessaging wearableMessaging)
         {
@@ -24,23 +23,20 @@ namespace MauiSample
             InitializeComponent();
         }
 
-        
-        public async Task SendToWatchAsync()
+
+        private async Task SendToWatchAsync()
         {
             if (await _wearableMessaging.IsWearableReachable())
             {
-                await _wearableMessaging.SendMessageAsync("counter", "42");
+                await _wearableMessaging.SendMessageAsync("counter", DateTime.UtcNow.Ticks.ToString());
             }
         }
 
         private void OnCounterClicked(object? sender, EventArgs e)
         {
-            count++;
+            _count++;
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
+            CounterBtn.Text = _count == 1 ? $"Clicked {_count} time" : $"Clicked {_count} times";
 
             SemanticScreenReader.Announce(CounterBtn.Text);
         }
