@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitignore" />
+    <File Path="CONTRIBUTING.md" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="USAGE.md" />
+  </Folder>
+  <Project Path="samples/MauiSample/MauiSample.csproj" Id="ae904eb7-4d76-4cbc-9700-34cb0eaf17ab" />
+  <Project Path="src/Plugin.Maui.WearableMessaging/Plugin.Maui.WearableMessaging.csproj" Id="084c0c99-76b7-41b7-a2b0-03eb94baaa2c" />
+</Solution>
