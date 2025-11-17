@@ -543,5 +543,44 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
     {
         _implementation.OnFileTransferCompleted(fileTransfer.File.FileUrl, fileTransfer.File.Metadata, error);
     }
+
+    public override void DidReceiveFile(WCSession session, WCSessionFile file)
+    {
+        try
+        {
+            var destUrl = SaveInbound(file);
+            _implementation.OnFileTransferCompleted(destUrl, file.Metadata, error: null);
+        }
+        catch (Foundation.NSErrorException nse)
+        {
+            _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nse.Error);
+        }
+        catch (Exception ex)
+        {
+            var nsErr = new Foundation.NSError(
+                new Foundation.NSString("Plugin.Maui.WearableMessaging"),
+                -1,
+                new Foundation.NSDictionary(new Foundation.NSString("desc"),
+                                            new Foundation.NSString(ex.Message ?? "error")));
+            _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nsErr);
+        }
+    }
+    private static Foundation.NSUrl SaveInbound(WatchConnectivity.WCSessionFile file)
+    {
+        var inbox = System.IO.Path.Combine(Microsoft.Maui.Storage.FileSystem.CacheDirectory, "WearInbox");
+        System.IO.Directory.CreateDirectory(inbox);
+
+        // unique name 
+        var id = file.Metadata?["id"]?.ToString() ?? System.Guid.NewGuid().ToString("N");
+        var baseName = file.FileUrl?.LastPathComponent ?? "watch-file";
+        var destPath = System.IO.Path.Combine(inbox, $"{id}-{baseName}");
+        var destUrl = Foundation.NSUrl.FromFilename(destPath);
+
+        Foundation.NSError? copyErr = null;
+        Foundation.NSFileManager.DefaultManager.Copy(file.FileUrl, destUrl, out copyErr);
+        if (copyErr is not null) throw new Foundation.NSErrorException(copyErr);
+
+        return destUrl;
+    }
 }
 #endif
