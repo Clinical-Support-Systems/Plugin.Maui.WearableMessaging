@@ -543,5 +543,63 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
     {
         _implementation.OnFileTransferCompleted(fileTransfer.File.FileUrl, fileTransfer.File.Metadata, error);
     }
+
+    /// <summary>
+    ///     Called when a file is received from the watch. Saves the file to the cache directory
+    ///     and notifies the implementation of the completed transfer.
+    /// </summary>
+    /// <param name="session">The WatchConnectivity session.</param>
+    /// <param name="file">The received file information.</param>
+    public override void DidReceiveFile(WCSession session, WCSessionFile file)
+    {
+        try
+        {
+            var destUrl = SaveInbound(file);
+            _implementation.OnFileTransferCompleted(destUrl, file.Metadata, error: null);
+        }
+        catch (Foundation.NSErrorException nse)
+        {
+            _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nse.Error);
+        }
+        catch (Exception ex)
+        {
+            var userInfo = Foundation.NSDictionary.FromObjectAndKey(
+                new Foundation.NSString(ex.Message ?? "error"),
+                Foundation.NSError.LocalizedDescriptionKey);
+            var nsErr = new Foundation.NSError(
+                new Foundation.NSString("Plugin.Maui.WearableMessaging"),
+                -1,
+                userInfo);
+            _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nsErr);
+        }
+    }
+    /// <summary>
+    ///     Saves an inbound file from the watch to the local cache directory.
+    /// </summary>
+    /// <param name="file">The <see cref="WatchConnectivity.WCSessionFile"/> containing the file to save.</param>
+    /// <returns>The <see cref="Foundation.NSUrl"/> of the saved file in the cache directory.</returns>
+    /// <exception cref="Foundation.NSErrorException">Thrown when the file copy operation fails.</exception>
+    private static Foundation.NSUrl SaveInbound(WatchConnectivity.WCSessionFile file)
+    {
+        var inbox = System.IO.Path.Combine(Microsoft.Maui.Storage.FileSystem.CacheDirectory, "WearInbox");
+        System.IO.Directory.CreateDirectory(inbox);
+
+        // Generate a unique filename using the ID from metadata or a new GUID.
+        var id = file.Metadata?["id"]?.ToString() ?? System.Guid.NewGuid().ToString("N");
+        var baseName = file.FileUrl?.LastPathComponent ?? "watch-file";
+        var destPath = System.IO.Path.Combine(inbox, $"{id}-{baseName}");
+        var destUrl = Foundation.NSUrl.FromFilename(destPath);
+
+        // Remove existing file if present to avoid copy failure
+        if (Foundation.NSFileManager.DefaultManager.FileExists(destPath))
+        {
+            Foundation.NSFileManager.DefaultManager.Remove(destUrl, out _);
+        }
+        Foundation.NSError? copyErr = null;
+        Foundation.NSFileManager.DefaultManager.Copy(file.FileUrl, destUrl, out copyErr);
+        if (copyErr is not null) throw new Foundation.NSErrorException(copyErr);
+
+        return destUrl;
+    }
 }
 #endif
