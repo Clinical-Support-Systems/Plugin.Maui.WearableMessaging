@@ -582,7 +582,7 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
         var inbox = System.IO.Path.Combine(Microsoft.Maui.Storage.FileSystem.CacheDirectory, "WearInbox");
         System.IO.Directory.CreateDirectory(inbox);
 
-        // unique name 
+        // Generate a unique filename using the ID from metadata or a new GUID.
         var id = file.Metadata?["id"]?.ToString() ?? System.Guid.NewGuid().ToString("N");
         var baseName = file.FileUrl?.LastPathComponent ?? "watch-file";
         var destPath = System.IO.Path.Combine(inbox, $"{id}-{baseName}");
