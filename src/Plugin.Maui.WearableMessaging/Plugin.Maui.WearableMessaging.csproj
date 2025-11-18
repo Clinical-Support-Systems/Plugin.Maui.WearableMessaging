@@ -16,28 +16,45 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 
 		<!-- NuGet Package Information -->
-		<IsPackable>True</IsPackable>
 		<PackageId>Plugin.Maui.WearableMessaging</PackageId>
 		<Version>1.0.0</Version>
-		<Authors>Your Name</Authors>
-		<Company>Your Company</Company>
+		<Authors>Clinical Support Systems</Authors>
 		<Description>A .NET MAUI plugin for seamless communication between MAUI applications and wearable devices (Apple Watch, Wear OS)</Description>
 		<PackageTags>dotnet-maui;maui-plugin;apple-watch;wear-os;wearables;watch-connectivity</PackageTags>
 		<PackageProjectUrl>https://github.com/yourusername/Plugin.Maui.WearableMessaging</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/yourusername/Plugin.Maui.WearableMessaging</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<PackageIcon>icon.png</PackageIcon>
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<IsPackable>True</IsPackable>
+
+		<!-- Build Configuration -->
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IncludeSymbols>true</IncludeSymbols>
+		<DebugType>portable</DebugType>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+
+		<!-- MinVer Configuration -->
+		<MinVerTagPrefix>v</MinVerTagPrefix>
+		<MinVerSkip>false</MinVerSkip>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<PropertyGroup>
+		<!-- Enable NuGet package auditing -->
+		<NuGetAudit>true</NuGetAudit>
+
+		<!-- Audit direct and transitive packages -->
+		<NuGetAuditMode>all</NuGetAuditMode>
+
+		<!-- Report low, moderate, high and critical advisories -->
+		<NuGetAuditLevel>low</NuGetAuditLevel>
+
+		<!-- Fails the build on CI or on release when a vulnerability is detected -->
+		<WarningsAsErrors Condition="$(ContinuousIntegrationBuild) == 'true' OR '$(Configuration)' == 'Release'">
+			(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
+		</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -69,6 +86,14 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="DotNet.ReproducibleBuilds" Version="1.2.39">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="MinVer" Version="6.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<!-- Android-specific packages -->
