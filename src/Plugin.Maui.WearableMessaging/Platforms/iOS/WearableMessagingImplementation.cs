@@ -576,6 +576,11 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
         var destPath = System.IO.Path.Combine(inbox, $"{id}-{baseName}");
         var destUrl = Foundation.NSUrl.FromFilename(destPath);
 
+        // Remove existing file if present to avoid copy failure
+        if (Foundation.NSFileManager.DefaultManager.FileExists(destPath))
+        {
+            Foundation.NSFileManager.DefaultManager.Remove(destUrl, out _);
+        }
         Foundation.NSError? copyErr = null;
         Foundation.NSFileManager.DefaultManager.Copy(file.FileUrl, destUrl, out copyErr);
         if (copyErr is not null) throw new Foundation.NSErrorException(copyErr);
