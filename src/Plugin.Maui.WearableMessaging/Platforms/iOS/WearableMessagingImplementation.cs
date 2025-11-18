@@ -544,6 +544,12 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
         _implementation.OnFileTransferCompleted(fileTransfer.File.FileUrl, fileTransfer.File.Metadata, error);
     }
 
+    /// <summary>
+    ///     Called when a file is received from the watch. Saves the file to the cache directory
+    ///     and notifies the implementation of the completed transfer.
+    /// </summary>
+    /// <param name="session">The WatchConnectivity session.</param>
+    /// <param name="file">The received file information.</param>
     public override void DidReceiveFile(WCSession session, WCSessionFile file)
     {
         try
