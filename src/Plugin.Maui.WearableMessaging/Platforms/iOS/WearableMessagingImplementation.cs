@@ -563,11 +563,13 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
         }
         catch (Exception ex)
         {
+            var userInfo = Foundation.NSDictionary.FromObjectAndKey(
+                new Foundation.NSString(ex.Message ?? "error"),
+                Foundation.NSError.LocalizedDescriptionKey);
             var nsErr = new Foundation.NSError(
                 new Foundation.NSString("Plugin.Maui.WearableMessaging"),
                 -1,
-                new Foundation.NSDictionary(new Foundation.NSString("desc"),
-                                            new Foundation.NSString(ex.Message ?? "error")));
+                userInfo);
             _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nsErr);
         }
     }
