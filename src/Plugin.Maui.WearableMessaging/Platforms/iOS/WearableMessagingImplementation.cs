@@ -571,6 +571,12 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
             _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nsErr);
         }
     }
+    /// <summary>
+    ///     Saves an inbound file from the watch to the local cache directory.
+    /// </summary>
+    /// <param name="file">The <see cref="WatchConnectivity.WCSessionFile"/> containing the file to save.</param>
+    /// <returns>The <see cref="Foundation.NSUrl"/> of the saved file in the cache directory.</returns>
+    /// <exception cref="Foundation.NSErrorException">Thrown when the file copy operation fails.</exception>
     private static Foundation.NSUrl SaveInbound(WatchConnectivity.WCSessionFile file)
     {
         var inbox = System.IO.Path.Combine(Microsoft.Maui.Storage.FileSystem.CacheDirectory, "WearInbox");
