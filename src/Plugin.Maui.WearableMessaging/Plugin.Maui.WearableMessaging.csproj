@@ -20,8 +20,8 @@
 		<Authors>Clinical Support Systems</Authors>
 		<Description>A .NET MAUI plugin for seamless communication between MAUI applications and wearable devices (Apple Watch, Wear OS)</Description>
 		<PackageTags>dotnet-maui;maui-plugin;apple-watch;wear-os;wearables;watch-connectivity</PackageTags>
-		<PackageProjectUrl>https://github.com/yourusername/Plugin.Maui.WearableMessaging</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/yourusername/Plugin.Maui.WearableMessaging</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/Clinical-Support-Systems/Plugin.Maui.WearableMessaging</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Clinical-Support-Systems/Plugin.Maui.WearableMessaging</RepositoryUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<IsPackable>True</IsPackable>
