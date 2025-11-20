@@ -5,16 +5,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    paths:
-      - 'src/Plugin.Maui.WearableMessaging/Plugin.Maui.WearableMessaging.csproj'
-      - 'tests/Plugin.Maui.WearableMessaging.Tests/Plugin.Maui.WearableMessaging.Tests.csproj'
-      - '.github/workflows/publish.yml'
   pull_request:
     branches: [ '*' ]
-    paths:
-      - 'src/Plugin.Maui.WearableMessaging/Plugin.Maui.WearableMessaging.csproj'
-      - 'tests/Plugin.Maui.WearableMessaging.Tests/Plugin.Maui.WearableMessaging.Tests.csproj'
-      - '.github/workflows/publish.yml'
   release:
     types: [ published ]
 
