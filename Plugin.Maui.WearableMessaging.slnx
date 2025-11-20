@@ -4,6 +4,7 @@
     <File Path=".github/workflows/publish.yml" />
     <File Path=".gitignore" />
     <File Path="CONTRIBUTING.md" />
+    <File Path="global.json" />
     <File Path="LICENSE" />
     <File Path="README.md" />
     <File Path="USAGE.md" />
