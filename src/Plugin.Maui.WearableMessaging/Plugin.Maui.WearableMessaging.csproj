@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;</TargetFrameworks>
-
+		<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;</TargetFrameworks>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<LangVersion>latest</LangVersion>
@@ -59,6 +58,7 @@
 
 	<ItemGroup>
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+		<None Include="WearableMessagingNotSupportedImplementation.cs" />
 	</ItemGroup>	
 
 	<!-- Android-specific files -->

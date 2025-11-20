@@ -1,5 +1,4 @@
-﻿
-namespace Plugin.Maui.WearableMessaging;
+﻿namespace Plugin.Maui.WearableMessaging;
 
 /// <summary>
 ///     Extension methods for registering the WearableMessaging plugin.
@@ -21,7 +20,7 @@ public static class WearableMessagingExtensions
 #elif IOS
             return new Platforms.iOS.WearableMessagingImplementation();
 #else
-            return new Platforms.Standard.WearableMessagingNotSupportedImplementation();
+            return new WearableMessagingNotSupportedImplementation();
 #endif
         });
 
@@ -49,7 +48,7 @@ public static class WearableMessagingExtensions
 #elif IOS
             return new Platforms.iOS.WearableMessagingImplementation(options);
 #else
-            return new Platforms.Standard.WearableMessagingNotSupportedImplementation();
+            return new WearableMessagingNotSupportedImplementation();
 #endif
         });
 
