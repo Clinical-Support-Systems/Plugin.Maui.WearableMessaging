@@ -76,6 +76,21 @@ public class LoopbackWearableMessagingTests
     }
 
     [Test]
+    public async Task TransferUserInfoAsync_RaisesUserInfoReceived()
+    {
+        var loopback = new LoopbackWearableMessaging();
+        var eventRaised = false;
+        loopback.UserInfoReceived += (_, _) => eventRaised = true;
+        var userInfo = new Dictionary<string, object>
+        {
+            { "userId", "12345" },
+            { "userName", "TestUser" }
+        };
+        await loopback.TransferUserInfoAsync(userInfo);
+        await Assert.That(eventRaised).IsTrue();
+    }
+
+    [Test]
     public async Task Constructor_RaisesWearableStateChanged()
     {
         // The event is raised in the constructor, so we can't catch it after instantiation.
