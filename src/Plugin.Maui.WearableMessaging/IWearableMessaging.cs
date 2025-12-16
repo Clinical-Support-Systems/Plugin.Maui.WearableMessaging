@@ -75,6 +75,15 @@ public interface IWearableMessaging
     Task TransferFileAsync(string filePath, Dictionary<string, object>? metadata = null);
 
     /// <summary>
+    ///     Transfers user info data to the wearable device in the background. Unlike messages,
+    ///     user info transfers are queued and delivered even when the wearable is not reachable.
+    /// </summary>
+    /// <param name="userInfo">Dictionary containing the user info data to transfer.</param>
+    /// <exception cref="WearableMessagingException">Thrown when the transfer fails to start.</exception>
+    Task TransferUserInfoAsync(Dictionary<string, object> userInfo);
+
+
+    /// <summary>
     ///     Raised when a message is received from the wearable device.
     /// </summary>
     event EventHandler<MessageReceivedEventArgs>? MessageReceived;
@@ -93,4 +102,9 @@ public interface IWearableMessaging
     ///     Raised when a file transfer from the wearable device completes.
     /// </summary>
     event EventHandler<FileTransferCompletedEventArgs>? FileTransferCompleted;
+
+    /// <summary>
+    ///     Raised when user info is received from the wearable device.
+    /// </summary>
+    event EventHandler<UserInfoReceivedEventArgs>? UserInfoReceived;
 }

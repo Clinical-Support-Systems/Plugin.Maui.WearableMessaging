@@ -82,6 +82,16 @@ public class WearableMessagingImplementation : IWearableMessaging
     public event EventHandler<FileTransferCompletedEventArgs>? FileTransferCompleted;
 
     /// <summary>
+    ///     Occurs when user info is received from the wearable device.
+    /// </summary>
+    /// <remarks>
+    ///     Subscribe to this event to receive notifications when user info data is transferred from
+    ///     the wearable device. Unlike messages, user info transfers are queued and delivered even when
+    ///     the device is unreachable, making them suitable for non-urgent data synchronization.
+    /// </remarks>
+    public event EventHandler<UserInfoReceivedEventArgs>? UserInfoReceived;
+
+    /// <summary>
     ///     Determines asynchronously whether the connected wearable device is currently reachable.
     /// </summary>
     /// <returns>
@@ -369,6 +379,48 @@ public class WearableMessagingImplementation : IWearableMessaging
         }
     }
 
+    /// <summary>
+    ///     Asynchronously transfers user info data to the connected Apple Watch using WatchConnectivity.
+    /// </summary>
+    /// <remarks>
+    ///     Unlike SendMessageAsync, this method queues the data for background delivery and does not
+    ///     require the watch to be immediately reachable. The data will be delivered when the watch becomes
+    ///     available. This is ideal for non-urgent data synchronization. Multiple transfers are queued and
+    ///     delivered in order.
+    /// </remarks>
+    /// <param name="userInfo">
+    ///     A dictionary containing key-value pairs representing the user info to transfer. Keys must be non-null
+    ///     strings; values must be serializable to platform-supported types.
+    /// </param>
+    /// <returns>
+    ///     A task that represents the asynchronous transfer operation. The task completes when the transfer has been
+    ///     queued, not when it's delivered.
+    /// </returns>
+    /// <exception cref="WearableMessagingException">
+    ///     Thrown if WatchConnectivity is not supported or if an error occurs while queuing the transfer.
+    /// </exception>
+    public Task TransferUserInfoAsync(Dictionary<string, object> userInfo)
+    {
+        if (_session == null || !WCSession.IsSupported)
+        {
+            throw new WearableMessagingException("WatchConnectivity is not supported");
+        }
+
+        try
+        {
+            var nsDict = ConvertToNativeDictionary(userInfo);
+            var transfer = _session.TransferUserInfo(nsDict);
+
+            LogDebug($"User info transfer queued. Outstanding: {_session.OutstandingUserInfoTransfers?.Length ?? 0}");
+
+            return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            throw new WearableMessagingException("Failed to transfer user info", ex);
+        }
+    }
+
     private void InitializeSession()
     {
         if (!WCSession.IsSupported)
@@ -491,6 +543,21 @@ public class WearableMessagingImplementation : IWearableMessaging
             filePath, meta, error == null, error?.LocalizedDescription));
     }
 
+    internal void OnUserInfoReceived(NSDictionary<NSString, NSObject> userInfo)
+    {
+        var dict = new Dictionary<string, object>();
+        foreach (var keyObj in userInfo.Keys)
+        {
+            var key = keyObj.ToString();
+            if (key == null) continue;
+            dict[key] = userInfo[keyObj];
+        }
+
+        UserInfoReceived?.Invoke(this, new UserInfoReceivedEventArgs(dict));
+        LogDebug($"User info received with {dict.Count} keys");
+    }
+
+
     private void LogDebug(string message)
     {
         if (_options.EnableDebugLogging)
@@ -573,6 +640,19 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
             _implementation.OnFileTransferCompleted(file.FileUrl, file.Metadata, nsErr);
         }
     }
+
+    /// <summary>
+    ///     Called when user info is received from the watch. This method handles data sent via
+    ///     transferUserInfo when immediate messaging is not possible or desired.
+    /// </summary>
+    /// <param name="session">The WatchConnectivity session.</param>
+    /// <param name="userInfo">The user info dictionary received from the watch.</param>
+    public override void DidReceiveUserInfo(WCSession session, NSDictionary<NSString, NSObject> userInfo)
+    {
+        _implementation.OnUserInfoReceived(userInfo);
+    }
+
+
     /// <summary>
     ///     Saves an inbound file from the watch to the local cache directory.
     /// </summary>

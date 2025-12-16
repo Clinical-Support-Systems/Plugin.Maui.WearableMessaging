@@ -14,6 +14,7 @@ namespace Plugin.Maui.WearableMessaging
         public event EventHandler<ApplicationContextChangedEventArgs>? ApplicationContextChanged;
         public event EventHandler<WearableStateChangedEventArgs>? WearableStateChanged;
         public event EventHandler<FileTransferCompletedEventArgs>? FileTransferCompleted;
+        public event EventHandler<UserInfoReceivedEventArgs>? UserInfoReceived;
 
         public Task<bool> IsWearableReachable()
         {
@@ -58,6 +59,11 @@ namespace Plugin.Maui.WearableMessaging
         }
 
         public Task TransferFileAsync(string filePath, Dictionary<string, object>? metadata = null)
+        {
+            throw new NotSupportedException("Wearable messaging is not supported on this platform");
+        }
+
+        public Task TransferUserInfoAsync(Dictionary<string, object> userInfo)
         {
             throw new NotSupportedException("Wearable messaging is not supported on this platform");
         }
