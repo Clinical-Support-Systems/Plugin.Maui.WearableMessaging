@@ -557,7 +557,6 @@ public class WearableMessagingImplementation : IWearableMessaging
         LogDebug($"User info received with {dict.Count} keys");
     }
 
-
     private void LogDebug(string message)
     {
         if (_options.EnableDebugLogging)
@@ -651,7 +650,6 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
     {
         _implementation.OnUserInfoReceived(userInfo);
     }
-
 
     /// <summary>
     ///     Saves an inbound file from the watch to the local cache directory.

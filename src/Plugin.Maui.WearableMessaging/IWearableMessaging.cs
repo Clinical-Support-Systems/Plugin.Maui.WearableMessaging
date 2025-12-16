@@ -82,7 +82,6 @@ public interface IWearableMessaging
     /// <exception cref="WearableMessagingException">Thrown when the transfer fails to start.</exception>
     Task TransferUserInfoAsync(Dictionary<string, object> userInfo);
 
-
     /// <summary>
     ///     Raised when a message is received from the wearable device.
     /// </summary>
