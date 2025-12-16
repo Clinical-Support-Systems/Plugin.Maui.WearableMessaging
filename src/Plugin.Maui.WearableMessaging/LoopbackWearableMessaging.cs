@@ -22,6 +22,9 @@ public sealed class LoopbackWearableMessaging : IWearableMessaging
     /// <inheritdoc />
     public event EventHandler<FileTransferCompletedEventArgs>? FileTransferCompleted;
 
+    /// <inheritdoc />
+    public event EventHandler<UserInfoReceivedEventArgs>? UserInfoReceived;
+
     /// <summary>
     /// Initializes a new instance of the LoopbackWearableMessaging class and raises the WearableStateChanged event to
     /// indicate that all wearable states are active.
@@ -85,6 +88,14 @@ public sealed class LoopbackWearableMessaging : IWearableMessaging
     public Task TransferFileAsync(string filePath, Dictionary<string, object>? metadata = null)
     {
         FileTransferCompleted?.Invoke(this, new FileTransferCompletedEventArgs(filePath, metadata, true));
+        return Task.CompletedTask;
+    }
+
+    /// <inheritdoc />
+    public Task TransferUserInfoAsync(Dictionary<string, object> userInfo)
+    {
+        // In loopback mode, immediately trigger the UserInfoReceived event to simulate reception
+        UserInfoReceived?.Invoke(this, new UserInfoReceivedEventArgs(userInfo));
         return Task.CompletedTask;
     }
 }

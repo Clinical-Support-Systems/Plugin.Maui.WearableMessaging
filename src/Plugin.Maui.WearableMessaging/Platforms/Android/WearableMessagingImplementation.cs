@@ -90,6 +90,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
                     continue;
 
                 var dataItem = dataEvent.DataItem;
+
                 if (dataItem.Uri.Path?.StartsWith("/application_context") == true)
                 {
                     var dataMap = DataMapItem.FromDataItem(dataItem).DataMap;
@@ -102,6 +103,10 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
                                   new Dictionary<string, object>();
                     ApplicationContextChanged?.Invoke(this,
                         new ApplicationContextChangedEventArgs(context));
+                }
+                else if (dataItem.Uri.Path?.StartsWith("/userinfo/") == true)
+                {
+                    HandleUserInfoTransfer(dataItem);
                 }
                 else if (dataItem.Uri.Path?.StartsWith("/file/") == true)
                 {
@@ -529,6 +534,68 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
         }
     }
 
+    /// <summary>
+    ///     Occurs when user info is received from the wearable device.
+    /// </summary>
+    /// <remarks>
+    ///     Subscribe to this event to receive notifications when user info data is transferred from
+    ///     the wearable device. On Android, this uses the Data Layer API for queued, guaranteed delivery.
+    /// </remarks>
+    public event EventHandler<UserInfoReceivedEventArgs>? UserInfoReceived;
+
+    /// <summary>
+    ///     Asynchronously transfers user info data to the connected wearable device using the Data Layer API.
+    /// </summary>
+    /// <remarks>
+    ///     Unlike SendMessageAsync, this method queues the data for background delivery and does not
+    ///     require the wearable to be immediately reachable. On Android, this is implemented using PutDataItem
+    ///     with unique paths to ensure each transfer is delivered. The data will be delivered when the wearable
+    ///     becomes available.
+    /// </remarks>
+    /// <param name="userInfo">
+    ///     A dictionary containing key-value pairs representing the user info to transfer. Keys must be non-null
+    ///     strings; values must be serializable to JSON.
+    /// </param>
+    /// <returns>
+    ///     A task that represents the asynchronous transfer operation. The task completes when the transfer has been
+    ///     queued, not when it's delivered.
+    /// </returns>
+    /// <exception cref="WearableMessagingException">
+    ///     Thrown if the Data Client is not initialized or if an error occurs while queuing the transfer.
+    /// </exception>
+    public async Task TransferUserInfoAsync(Dictionary<string, object> userInfo)
+    {
+        if (_dataClient == null)
+        {
+            throw new WearableMessagingException("Data client is not initialized");
+        }
+
+        try
+        {
+            // Use unique path with timestamp to ensure each transfer is delivered
+            var uniqueId = Guid.NewGuid().ToString("N");
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var path = $"/userinfo/{timestamp}_{uniqueId}";
+
+            var json = JsonSerializer.Serialize(userInfo);
+            var request = PutDataMapRequest.Create(path);
+
+            request.DataMap.PutString("userinfo", json);
+            request.DataMap.PutLong("timestamp", timestamp);
+            request.DataMap.PutString("id", uniqueId);
+
+            var putRequest = request.AsPutDataRequest();
+            putRequest.SetUrgent();
+
+            await _dataClient.PutDataItemAsync(putRequest);
+            LogDebug($"User info transfer queued: {path}");
+        }
+        catch (Exception ex)
+        {
+            throw new WearableMessagingException("Failed to transfer user info", ex);
+        }
+    }
+
     private void InitializeClients()
     {
         try
@@ -635,6 +702,30 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
         catch (Exception ex)
         {
             LogDebug($"Failed to handle file transfer: {ex.Message}");
+        }
+    }
+
+    private void HandleUserInfoTransfer(IDataItem dataItem)
+    {
+        try
+        {
+            var dataMap = DataMapItem.FromDataItem(dataItem)?.DataMap;
+            if (dataMap == null) return;
+
+            var json = dataMap.GetString("userinfo");
+            if (string.IsNullOrEmpty(json)) return;
+
+            var userInfo = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ??
+                          new Dictionary<string, object>();
+
+            UserInfoReceived?.Invoke(this, new UserInfoReceivedEventArgs(userInfo));
+
+            var id = dataMap.GetString("id") ?? "unknown";
+            LogDebug($"User info received: {id} with {userInfo.Count} keys");
+        }
+        catch (Exception ex)
+        {
+            LogDebug($"Failed to handle user info transfer: {ex.Message}");
         }
     }
 
