@@ -1,6 +1,8 @@
 ﻿#if ANDROID
 using System.Text;
 using System.Text.Json;
+using Android.Content;
+using Android.Gms.Common.Apis;
 using Android.Gms.Wearable;
 using Android.Runtime;
 using Application = Android.App.Application;
@@ -19,6 +21,12 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     private readonly WearableMessagingOptions _options;
     private CapabilityClient? _capabilityClient;
     private DataClient? _dataClient;
+    private readonly object _initializationLock = new();
+    private readonly Func<Context, CapabilityClient> _capabilityClientFactory;
+    private readonly Func<Context, DataClient> _dataClientFactory;
+    private bool _isInitialized;
+    private bool _isWearableApiAvailable = true;
+    private readonly Func<Context, MessageClient> _messageClientFactory;
     private MessageClient? _messageClient;
     private string? _wearableNodeId;
 
@@ -40,9 +48,27 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// <param name="options">The configuration options used to set up messaging behavior for wearable devices. Cannot be null.</param>
     /// <exception cref="ArgumentNullException">Thrown if <paramref name="options" /> is null.</exception>
     public WearableMessagingImplementation(WearableMessagingOptions options)
+        : this(
+            options,
+            context => WearableClass.GetMessageClient(context),
+            context => WearableClass.GetDataClient(context),
+            context => WearableClass.GetCapabilityClient(context))
+    {
+    }
+
+    internal WearableMessagingImplementation(
+        WearableMessagingOptions options,
+        Func<Context, MessageClient> messageClientFactory,
+        Func<Context, DataClient> dataClientFactory,
+        Func<Context, CapabilityClient> capabilityClientFactory)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        InitializeClients();
+        _messageClientFactory = messageClientFactory ??
+                                throw new ArgumentNullException(nameof(messageClientFactory));
+        _dataClientFactory = dataClientFactory ??
+                             throw new ArgumentNullException(nameof(dataClientFactory));
+        _capabilityClientFactory = capabilityClientFactory ??
+                                   throw new ArgumentNullException(nameof(capabilityClientFactory));
     }
 
     /// <summary>
@@ -204,6 +230,8 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </returns>
     public async Task<bool> IsWearableReachable()
     {
+        if (!EnsureInitialized()) return false;
+
         var nodes = await GetConnectedNodesAsync();
         return nodes.Count != 0;
     }
@@ -224,6 +252,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     {
         try
         {
+            if (!EnsureInitialized()) return false;
             if (_capabilityClient == null) return false;
 
             var result = await _capabilityClient.GetCapabilityAsync(
@@ -247,7 +276,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </returns>
     public Task<bool> IsSupported()
     {
-        return Task.FromResult(true);
+        return Task.FromResult(EnsureInitialized());
     }
 
     /// <summary>
@@ -283,6 +312,11 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </exception>
     public async Task SendMessageAsync(Dictionary<string, string> message)
     {
+        if (!EnsureInitialized())
+        {
+            throw new WearableMessagingException("Wearable API is not available on this device");
+        }
+
         if (_messageClient == null)
         {
             throw new WearableMessagingException("Message client is not initialized");
@@ -390,6 +424,11 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </exception>
     public async Task UpdateApplicationContextAsync(Dictionary<string, object> context)
     {
+        if (!EnsureInitialized())
+        {
+            throw new WearableMessagingException("Wearable API is not available on this device");
+        }
+
         if (_dataClient == null)
         {
             throw new WearableMessagingException("Data client is not initialized");
@@ -428,6 +467,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </returns>
     public async Task<Dictionary<string, object>> GetApplicationContextAsync()
     {
+        if (!EnsureInitialized()) return new Dictionary<string, object>();
         if (_dataClient == null)
             return new Dictionary<string, object>();
 
@@ -491,6 +531,11 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// <exception cref="FileNotFoundException">Thrown if the file specified by <paramref name="filePath" /> does not exist.</exception>
     public async Task TransferFileAsync(string filePath, Dictionary<string, object>? metadata = null)
     {
+        if (!EnsureInitialized())
+        {
+            throw new WearableMessagingException("Wearable API is not available on this device");
+        }
+
         if (_dataClient == null)
         {
             throw new WearableMessagingException("Data client is not initialized");
@@ -565,6 +610,11 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     /// </exception>
     public async Task TransferUserInfoAsync(Dictionary<string, object> userInfo)
     {
+        if (!EnsureInitialized())
+        {
+            throw new WearableMessagingException("Wearable API is not available on this device");
+        }
+
         if (_dataClient == null)
         {
             throw new WearableMessagingException("Data client is not initialized");
@@ -598,23 +648,47 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
 
     private void InitializeClients()
     {
-        try
-        {
-            var context = Application.Context;
-            _messageClient = WearableClass.GetMessageClient(context);
-            _dataClient = WearableClass.GetDataClient(context);
-            _capabilityClient = WearableClass.GetCapabilityClient(context);
+        var context = Application.Context;
+        _messageClient = _messageClientFactory(context);
+        _dataClient = _dataClientFactory(context);
+        _capabilityClient = _capabilityClientFactory(context);
 
-            if (!_options.AutoActivateSession)
-                return;
+        if (!_options.AutoActivateSession)
+            return;
 
-            RegisterListeners();
-            _ = UpdateWearableNodeId();
-            LogDebug("Wearable clients initialized");
-        }
-        catch (Exception ex)
+        RegisterListeners();
+        _ = UpdateWearableNodeId();
+        LogDebug("Wearable clients initialized");
+    }
+
+    private bool EnsureInitialized()
+    {
+        if (_isInitialized)
+            return _isWearableApiAvailable;
+
+        lock (_initializationLock)
         {
-            LogDebug($"Failed to initialize clients: {ex.Message}");
+            if (_isInitialized)
+                return _isWearableApiAvailable;
+
+            try
+            {
+                InitializeClients();
+                _isWearableApiAvailable = true;
+            }
+            catch (ApiException ex) when (ex.StatusCode == CommonStatusCodes.ApiNotConnected)
+            {
+                _isWearableApiAvailable = false;
+                LogDebug($"Wearable API unavailable: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _isWearableApiAvailable = false;
+                LogDebug($"Wearable API unavailable: {ex.Message}");
+            }
+
+            _isInitialized = true;
+            return _isWearableApiAvailable;
         }
     }
 

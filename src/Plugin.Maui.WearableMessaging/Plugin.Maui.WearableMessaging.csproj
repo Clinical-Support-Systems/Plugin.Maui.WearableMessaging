@@ -61,6 +61,12 @@
 		<None Include="WearableMessagingNotSupportedImplementation.cs" />
 	</ItemGroup>	
 
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+			<_Parameter1>Plugin.Maui.WearableMessaging.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
 	<!-- Android-specific files -->
 	<ItemGroup Condition="$(TargetFramework.Contains('-android')) != true">
 		<Compile Remove="**\*.Android.cs" />
