@@ -9,7 +9,7 @@ on:
     - "v[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
-  DOTNET_VERSION: '10.0.x' # The .NET SDK version to use
+  DOTNET_VERSION: '11.0.x' # The .NET SDK version to use
   PACKAGE_DIR: src/Plugin.Maui.WearableMessaging/bin/Release
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
         run: dotnet build src\Plugin.Maui.WearableMessaging\Plugin.Maui.WearableMessaging.csproj -c Release
 
       - name: Test
-        run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net10.0 -c Release
+        run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net11.0 -c Release
 
       - name: Get version information from tag
         id: get_version

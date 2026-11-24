@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
-  DOTNET_VERSION: '10.0.x' # The .NET SDK version to use
+  DOTNET_VERSION: '11.0.x' # The .NET SDK version to use
 
 jobs:
   build:
@@ -38,6 +38,6 @@ jobs:
     - name: Build
       run: dotnet build Plugin.Maui.WearableMessaging.slnx -c Release
 
-    # The Android test target needs a device, so only the net10.0 tests run here.
+    # The Android test target needs a device, so only the net11.0 tests run here.
     - name: Test
-      run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net10.0 -c Release --no-build
+      run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net11.0 -c Release --no-build

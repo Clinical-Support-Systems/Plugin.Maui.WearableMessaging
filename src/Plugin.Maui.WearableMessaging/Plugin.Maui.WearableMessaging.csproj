@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net10.0;net10.0-android</TargetFrameworks>
+		<TargetFrameworks>net11.0;net11.0-android</TargetFrameworks>
 		<!-- The iOS workload is not available on Linux -->
-		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<LangVersion>latest</LangVersion>
@@ -13,7 +13,7 @@
 		<WarningsAsErrors />
 		<NoWarn>$(NoWarn);CS8632;CS8618</NoWarn>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">13.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 
 		<!-- NuGet Package Information -->
@@ -60,13 +60,7 @@
 
 	<ItemGroup>
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
-		<None Include="WearableMessagingNotSupportedImplementation.cs" />
-	</ItemGroup>	
-
-	<ItemGroup>
-		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-			<_Parameter1>Plugin.Maui.WearableMessaging.Tests</_Parameter1>
-		</AssemblyAttribute>
+		<InternalsVisibleTo Include="Plugin.Maui.WearableMessaging.Tests" />
 	</ItemGroup>
 
 	<!-- Android-specific files -->
@@ -107,12 +101,8 @@
 	<!-- Android-specific packages -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
 		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
-		<!-- Align the AndroidX Ktx packages MAUI 10 pins with the newer AndroidX the Wearable binding pulls in (NU1608) -->
-		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.6.0.1" />
+		<!-- MAUI 11 pins Fragment.Ktx below the AndroidX Fragment the Wearable binding pulls in (NU1608) -->
 		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.11.0.1" />
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
-		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.11.0.1" />
 	</ItemGroup>
 
 </Project>

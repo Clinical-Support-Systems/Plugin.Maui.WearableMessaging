@@ -44,7 +44,7 @@ SampleName/
 
 ### iOS + Apple Watch
 
-1. Open the solution in Visual Studio for Mac
+1. Open the solution in VS Code (C# Dev Kit and .NET MAUI extensions) or Rider on a Mac
 2. Build and deploy the MAUI app to an iPhone
 3. Open the Watch project in Xcode
 4. Build and deploy the Watch app
@@ -60,11 +60,11 @@ SampleName/
 ## Requirements
 
 - Visual Studio 2026 or later
-- .NET 10 SDK
+- .NET 11 SDK
 - MAUI workload installed
 
 ### For iOS
-- macOS with Xcode 27.2 (the version the current .NET 10 iOS workload requires)
+- macOS with Xcode 27.2 (the version the current .NET 11 iOS workload requires)
 - iOS device and Apple Watch
 - Apple Developer account
 
