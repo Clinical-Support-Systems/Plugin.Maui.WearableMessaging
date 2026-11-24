@@ -1,0 +1,43 @@
+name: Build for CI
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - "**.md"
+  pull_request:
+    branches: [ "main" ]
+
+# A newer push to the same pull request cancels the older run; runs on main always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_VERSION: '10.0.x' # The .NET SDK version to use
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0 # MinVer versions the package from the latest tag
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install .NET MAUI Workload
+      run: dotnet workload restore Plugin.Maui.WearableMessaging.slnx
+
+    # Library (Android, iOS, plain .NET; packs the .nupkg), tests and sample.
+    - name: Build
+      run: dotnet build Plugin.Maui.WearableMessaging.slnx -c Release
+
+    # The Android test target needs a device, so only the net10.0 tests run here.
+    - name: Test
+      run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net10.0 -c Release --no-build

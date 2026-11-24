@@ -64,7 +64,7 @@ SampleName/
 - MAUI workload installed
 
 ### For iOS
-- macOS with Xcode 26+
+- macOS with Xcode 27.2 (the version the current .NET 10 iOS workload requires)
 - iOS device and Apple Watch
 - Apple Developer account
 

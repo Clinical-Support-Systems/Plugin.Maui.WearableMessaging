@@ -56,7 +56,7 @@ builder.UseWearableMessaging(options =>
 ### iOS (Apple Watch)
 
 #### Requirements
-- Xcode 26+
+- Xcode 27.2 (the version the current .NET 10 iOS workload requires)
 - watchOS 9+
 - iOS deployment target 13.0+
 

@@ -1,0 +1,79 @@
+name: Create a (Pre)release on NuGet
+
+# Push a tag such as v1.2.0 or v1.2.0-rc1 (or create a GitHub Release with one) on a commit that is on main.
+# MinVer turns the tag into the package version.
+on:
+  push:
+    tags:
+    - "v[0-9]+.[0-9]+.[0-9]+"
+    - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+env:
+  DOTNET_VERSION: '10.0.x' # The .NET SDK version to use
+  PACKAGE_DIR: src/Plugin.Maui.WearableMessaging/bin/Release
+
+jobs:
+  release-nuget:
+
+    runs-on: windows-latest
+
+    permissions:
+      contents: write # creates the GitHub Release
+      id-token: write # lets NuGet/login trade GitHub's OIDC token for a short-lived nuget.org API key (Trusted Publishing)
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history: MinVer needs the tag, and any commit on main can be released
+
+      - name: Verify the tagged commit is on main
+        shell: bash
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install .NET MAUI Workload
+        run: dotnet workload restore src\Plugin.Maui.WearableMessaging\Plugin.Maui.WearableMessaging.csproj
+
+      # GeneratePackageOnBuild packs the .nupkg and .snupkg as part of the build.
+      - name: Build and pack
+        run: dotnet build src\Plugin.Maui.WearableMessaging\Plugin.Maui.WearableMessaging.csproj -c Release
+
+      - name: Test
+        run: dotnet test --project tests\Plugin.Maui.WearableMessaging.Tests\Plugin.Maui.WearableMessaging.Tests.csproj -f net10.0 -c Release
+
+      - name: Get version information from tag
+        id: get_version
+        run: |
+          $version="${{github.ref_name}}".TrimStart("v")
+          "version-without-v=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: NuGet login (Trusted Publishing)
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }} # nuget.org profile name of the trusted publishing policy owner
+
+      # --skip-duplicate makes a re-run succeed when this version was already pushed.
+      # The matching .snupkg next to the .nupkg is pushed to the symbol server automatically.
+      - name: Push
+        run: dotnet nuget push ${{ env.PACKAGE_DIR }}/Plugin.Maui.WearableMessaging.${{ steps.get_version.outputs.version-without-v }}.nupkg -s https://api.nuget.org/v3/index.json -k ${{ steps.nuget_login.outputs.NUGET_API_KEY }} --skip-duplicate
+
+      - name: GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.get_version.outputs.version-without-v }}
+        run: |
+          files="$PACKAGE_DIR/Plugin.Maui.WearableMessaging.$VERSION.nupkg $PACKAGE_DIR/Plugin.Maui.WearableMessaging.$VERSION.snupkg"
+          # A release created in the GitHub UI already exists (it created the tag): only attach the packages.
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" $files --clobber
+          else
+            prerelease=$([[ "$VERSION" == *-* ]] && echo --prerelease || true)
+            gh release create "$TAG" $files --verify-tag --generate-notes $prerelease
+          fi

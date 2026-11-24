@@ -201,7 +201,7 @@ See the [samples](./samples/) directory for complete example applications:
 
 - .NET 10 SDK or higher (the package targets `net10.0`, `net10.0-android` and `net10.0-ios`; .NET 11 apps can consume it)
 - MAUI workload installed
-- For iOS: iOS 13.0+, Xcode 26+, watchOS 9+
+- For iOS: iOS 13.0+, Xcode 27.2 (the version the current .NET 10 iOS workload requires), watchOS 9+
 - For Android: Android 7.0 (API 24)+, Wear OS 3+, Google Play services
 
 ## Contributing

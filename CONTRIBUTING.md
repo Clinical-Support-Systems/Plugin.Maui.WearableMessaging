@@ -18,7 +18,7 @@ Thank you for your interest in contributing! This document provides guidelines f
 - Visual Studio 2026 or later (Windows), or VS Code / Rider
 - .NET 10 SDK or later
 - MAUI workload installed
-- For iOS development: macOS, Xcode 26+
+- For iOS development: macOS, Xcode 27.2 (the version the current .NET 10 iOS workload requires)
 - For Android development: Android SDK (API 36), JDK 17
 
 ### Building the Project
