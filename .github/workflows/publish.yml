@@ -2,6 +2,7 @@ name: Create a (Pre)release on NuGet
 
 # Push a tag such as v1.2.0 or v1.2.0-rc1 (or create a GitHub Release with one) on a commit that is on main.
 # MinVer turns the tag into the package version.
+# Keep this file name: nuget.org's Trusted Publishing policy is bound to it.
 on:
   push:
     tags:
