@@ -148,20 +148,20 @@ public class WearableMessagingImplementation : IWearableMessaging
     /// <remarks>
     ///     The method requires an active and reachable Apple Watch session. If the session is
     ///     not available or the watch is unreachable, the operation will fail immediately. The message is sent using
-    ///     Apple's WatchConnectivity framework, and any errors encountered during transmission are reported via the
-    ///     returned task.
+    ///     Apple's WatchConnectivity framework, which reports no delivery for a message sent without a reply handler,
+    ///     only a failure, and that arrives after the returned task has completed, so it is logged. To know that the
+    ///     watch received the message, use <see cref="SendMessageWithReplyAsync" />.
     /// </remarks>
     /// <param name="message">
     ///     A dictionary containing key-value pairs representing the message to send. Keys and values must be non-null
     ///     strings.
     /// </param>
     /// <returns>
-    ///     A task that represents the asynchronous send operation. The task completes when the message has been sent or
-    ///     an error occurs.
+    ///     A task that represents the asynchronous send operation. The task completes when WatchConnectivity has accepted
+    ///     the message.
     /// </returns>
     /// <exception cref="WearableMessagingException">
-    ///     Thrown if WatchConnectivity is not supported, the Apple Watch is not reachable, or if an error occurs while
-    ///     sending the message.
+    ///     Thrown if WatchConnectivity is not supported or the Apple Watch is not reachable.
     /// </exception>
     public Task SendMessageAsync(Dictionary<string, string> message)
     {
@@ -175,25 +175,15 @@ public class WearableMessagingImplementation : IWearableMessaging
             throw new WearableMessagingException("Apple Watch is not reachable");
         }
 
-        var tcs = new TaskCompletionSource<bool>();
         var nsDict = ConvertToNativeDictionary(message);
 
+        // Without a reply handler WatchConnectivity calls back only on failure, so waiting for a callback would never
+        // end for a delivered message. The task completes once the message is handed over, as on Android, where it
+        // completes once the message is queued.
         _session.SendMessage(nsDict, null, error =>
-        {
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (error != null)
-            {
-                tcs.SetException(new WearableMessagingException(
-                    $"Failed to send message: {error.LocalizedDescription}",
-                    error.Code.ToString()));
-            }
-            else
-            {
-                tcs.SetResult(true);
-            }
-        });
+            LogDebug($"Failed to send message: {error.LocalizedDescription} ({error.Code})"));
 
-        return tcs.Task;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -238,13 +228,15 @@ public class WearableMessagingImplementation : IWearableMessaging
         var nsDict = ConvertToNativeDictionary(message);
         var timeoutValue = timeout ?? _options.DefaultReplyTimeout;
 
+        // The timeout below may already have completed the task when a late reply or error arrives, and SetResult or
+        // SetException would then throw inside WatchConnectivity's callback.
         _session.SendMessage(nsDict, reply =>
         {
             var replyDict = ConvertFromNativeDictionary(reply);
-            tcs.SetResult(replyDict);
+            tcs.TrySetResult(replyDict);
         }, error =>
         {
-            tcs.SetException(new WearableMessagingException(
+            tcs.TrySetException(new WearableMessagingException(
                 $"Failed to send message: {error.LocalizedDescription}",
                 error.Code.ToString()));
         });
