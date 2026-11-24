@@ -199,10 +199,10 @@ See the [samples](./samples/) directory for complete example applications:
 
 ## Requirements
 
-- .NET 8.0 or higher
+- .NET 11 SDK or higher (the package targets `net11.0`, `net11.0-android` and `net11.0-ios`)
 - MAUI workload installed
-- For iOS: Xcode 15+, watchOS 9+
-- For Android: Android SDK 30+, Wear OS 3+
+- For iOS: iOS 15.0+, Xcode 27.2 (the version the current .NET 11 iOS workload requires), watchOS 9+
+- For Android: Android 7.0 (API 24)+, Wear OS 3+, Google Play services
 
 ## Contributing
 

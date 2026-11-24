@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;</TargetFrameworks>
+		<TargetFrameworks>net11.0;net11.0-android</TargetFrameworks>
+		<!-- The iOS workload is not available on Linux -->
+		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net11.0-ios</TargetFrameworks>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<LangVersion>latest</LangVersion>
@@ -11,8 +13,8 @@
 		<WarningsAsErrors />
 		<NoWarn>$(NoWarn);CS8632;CS8618</NoWarn>
 
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">13.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 
 		<!-- NuGet Package Information -->
 		<PackageId>Plugin.Maui.WearableMessaging</PackageId>
@@ -52,19 +54,13 @@
 
 		<!-- Fails the build on CI or on release when a vulnerability is detected -->
 		<WarningsAsErrors Condition="$(ContinuousIntegrationBuild) == 'true' OR '$(Configuration)' == 'Release'">
-			(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
+			$(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
 		</WarningsAsErrors>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
-		<None Include="WearableMessagingNotSupportedImplementation.cs" />
-	</ItemGroup>	
-
-	<ItemGroup>
-		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-			<_Parameter1>Plugin.Maui.WearableMessaging.Tests</_Parameter1>
-		</AssemblyAttribute>
+		<InternalsVisibleTo Include="Plugin.Maui.WearableMessaging.Tests" />
 	</ItemGroup>
 
 	<!-- Android-specific files -->
@@ -84,7 +80,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
-		<PackageReference Include="Roslynator.Analyzers" Version="4.14.0">
+		<PackageReference Include="Roslynator.Analyzers" Version="5.0.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -92,11 +88,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="DotNet.ReproducibleBuilds" Version="1.2.39">
+		<PackageReference Include="DotNet.ReproducibleBuilds" Version="2.0.5">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="MinVer" Version="6.0.0">
+		<PackageReference Include="MinVer" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -104,7 +100,9 @@
 
 	<!-- Android-specific packages -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="118.2.0.3" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
+		<!-- MAUI 11 pins Fragment.Ktx below the AndroidX Fragment the Wearable binding pulls in (NU1608) -->
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
 	</ItemGroup>
 
 </Project>

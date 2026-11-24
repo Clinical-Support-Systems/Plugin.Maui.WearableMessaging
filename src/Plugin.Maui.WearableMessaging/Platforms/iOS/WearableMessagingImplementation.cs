@@ -578,6 +578,23 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
         _implementation = implementation;
     }
 
+    // The three activation callbacks are required on iOS; without them watch switching leaves the session inactive.
+    public override void ActivationDidComplete(WCSession session, WCSessionActivationState activationState,
+        NSError? error)
+    {
+        _implementation.OnStateChanged();
+    }
+
+    public override void DidBecomeInactive(WCSession session)
+    {
+    }
+
+    public override void DidDeactivate(WCSession session)
+    {
+        // Apple: re-activate so the session binds to the newly selected Apple Watch.
+        session.ActivateSession();
+    }
+
     public override void SessionReachabilityDidChange(WCSession session)
     {
         _implementation.OnStateChanged();

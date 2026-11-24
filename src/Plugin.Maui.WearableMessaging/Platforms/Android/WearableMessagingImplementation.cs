@@ -87,10 +87,17 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     public void OnCapabilityChanged(ICapabilityInfo capabilityInfo)
     {
         _ = UpdateWearableNodeId();
+        _ = RaiseWearableStateChanged(capabilityInfo.Nodes.Count != 0);
+    }
 
-        var isReachable = capabilityInfo.Nodes.Count == 0;
+    private async Task RaiseWearableStateChanged(bool isReachable)
+    {
+        // The listener only reports reachable nodes; a watch out of range can still have the app installed.
+        var isAppInstalled = isReachable || await IsWearableAppInstalled();
+
+        // Android has no "paired" query; a node that advertises the capability is at least paired.
         WearableStateChanged?.Invoke(this, new WearableStateChangedEventArgs(
-            isReachable, isReachable, isReachable));
+            isReachable, isAppInstalled, isAppInstalled));
     }
 
     /// <summary>
@@ -237,16 +244,16 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     }
 
     /// <summary>
-    ///     Determines whether the wearable app is installed and reachable on any connected device.
+    ///     Determines whether the wearable app is installed on any paired device, reachable or not.
     /// </summary>
     /// <remarks>
     ///     This method returns <see langword="false" /> if the capability client is not initialized or if
-    ///     an error occurs during the check. The result may vary depending on the current connection state and device
-    ///     availability.
+    ///     an error occurs during the check. Like <c>WCSession.WatchAppInstalled</c> on iOS, a watch that is currently
+    ///     out of range still counts; use <see cref="IsWearableReachable" /> to check that it can be messaged now.
     /// </remarks>
     /// <returns>
     ///     A task that represents the asynchronous operation. The task result is <see langword="true" /> if the wearable app
-    ///     is installed and reachable; otherwise, <see langword="false" />.
+    ///     is installed on a paired device; otherwise, <see langword="false" />.
     /// </returns>
     public async Task<bool> IsWearableAppInstalled()
     {
@@ -257,9 +264,9 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
 
             var result = await _capabilityClient.GetCapabilityAsync(
                 WearableCapability,
-                CapabilityClient.FilterReachable);
+                CapabilityClient.FilterAll);
 
-            return result.Nodes.Count == 0;
+            return result.Nodes.Count != 0;
         }
         catch
         {
