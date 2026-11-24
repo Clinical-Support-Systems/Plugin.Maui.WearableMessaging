@@ -183,13 +183,13 @@ public class WearableMessagingImplementation : IWearableMessaging
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (error != null)
             {
-                tcs.TrySetException(new WearableMessagingException(
+                tcs.SetException(new WearableMessagingException(
                     $"Failed to send message: {error.LocalizedDescription}",
                     error.Code.ToString()));
             }
             else
             {
-                tcs.TrySetResult(true);
+                tcs.SetResult(true);
             }
         });
 
@@ -241,10 +241,10 @@ public class WearableMessagingImplementation : IWearableMessaging
         _session.SendMessage(nsDict, reply =>
         {
             var replyDict = ConvertFromNativeDictionary(reply);
-            tcs.TrySetResult(replyDict);
+            tcs.SetResult(replyDict);
         }, error =>
         {
-            tcs.TrySetException(new WearableMessagingException(
+            tcs.SetException(new WearableMessagingException(
                 $"Failed to send message: {error.LocalizedDescription}",
                 error.Code.ToString()));
         });
