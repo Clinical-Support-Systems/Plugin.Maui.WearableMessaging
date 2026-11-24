@@ -15,11 +15,11 @@ Thank you for your interest in contributing! This document provides guidelines f
 
 ### Prerequisites
 
-- Visual Studio 2022 or later (Windows/Mac)
-- .NET 8.0 SDK or later
+- Visual Studio 2026 or later (Windows), or VS Code / Rider
+- .NET 10 SDK or later
 - MAUI workload installed
-- For iOS development: macOS, Xcode 15+
-- For Android development: Android SDK 30+
+- For iOS development: macOS, Xcode 26+
+- For Android development: Android SDK (API 36), JDK 17
 
 ### Building the Project
 

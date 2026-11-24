@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;</TargetFrameworks>
+		<TargetFrameworks>net10.0;net10.0-android;net10.0-ios</TargetFrameworks>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
 		<LangVersion>latest</LangVersion>
@@ -12,7 +12,7 @@
 		<NoWarn>$(NoWarn);CS8632;CS8618</NoWarn>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">13.0</SupportedOSPlatformVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
 
 		<!-- NuGet Package Information -->
 		<PackageId>Plugin.Maui.WearableMessaging</PackageId>
@@ -52,7 +52,7 @@
 
 		<!-- Fails the build on CI or on release when a vulnerability is detected -->
 		<WarningsAsErrors Condition="$(ContinuousIntegrationBuild) == 'true' OR '$(Configuration)' == 'Release'">
-			(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
+			$(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904
 		</WarningsAsErrors>
 	</PropertyGroup>
 
@@ -104,7 +104,7 @@
 
 	<!-- Android-specific packages -->
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="118.2.0.3" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
 	</ItemGroup>
 
 </Project>

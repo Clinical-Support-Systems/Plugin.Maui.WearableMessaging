@@ -59,18 +59,17 @@ SampleName/
 
 ## Requirements
 
-- Visual Studio 2022 or later
-- .NET 8.0 SDK
+- Visual Studio 2026 or later
+- .NET 10 SDK
 - MAUI workload installed
 
 ### For iOS
-- macOS with Xcode 15+
+- macOS with Xcode 26+
 - iOS device and Apple Watch
 - Apple Developer account
 
 ### For Android
-- Android SDK 30+
-- Android phone and Wear OS watch
+- Android 7.0 (API 24)+ phone and Wear OS watch
 - Google Play Services
 
 ## Contributing Samples

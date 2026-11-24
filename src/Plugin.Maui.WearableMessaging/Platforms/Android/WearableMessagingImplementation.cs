@@ -88,7 +88,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
     {
         _ = UpdateWearableNodeId();
 
-        var isReachable = capabilityInfo.Nodes.Count == 0;
+        var isReachable = capabilityInfo.Nodes.Count != 0;
         WearableStateChanged?.Invoke(this, new WearableStateChangedEventArgs(
             isReachable, isReachable, isReachable));
     }
@@ -259,7 +259,7 @@ public class WearableMessagingImplementation : Object, IWearableMessaging,
                 WearableCapability,
                 CapabilityClient.FilterReachable);
 
-            return result.Nodes.Count == 0;
+            return result.Nodes.Count != 0;
         }
         catch
         {

@@ -183,13 +183,13 @@ public class WearableMessagingImplementation : IWearableMessaging
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
             if (error != null)
             {
-                tcs.SetException(new WearableMessagingException(
+                tcs.TrySetException(new WearableMessagingException(
                     $"Failed to send message: {error.LocalizedDescription}",
                     error.Code.ToString()));
             }
             else
             {
-                tcs.SetResult(true);
+                tcs.TrySetResult(true);
             }
         });
 
@@ -241,10 +241,10 @@ public class WearableMessagingImplementation : IWearableMessaging
         _session.SendMessage(nsDict, reply =>
         {
             var replyDict = ConvertFromNativeDictionary(reply);
-            tcs.SetResult(replyDict);
+            tcs.TrySetResult(replyDict);
         }, error =>
         {
-            tcs.SetException(new WearableMessagingException(
+            tcs.TrySetException(new WearableMessagingException(
                 $"Failed to send message: {error.LocalizedDescription}",
                 error.Code.ToString()));
         });
@@ -576,6 +576,23 @@ internal class WcSessionDelegateImpl : WCSessionDelegate
     public WcSessionDelegateImpl(WearableMessagingImplementation implementation)
     {
         _implementation = implementation;
+    }
+
+    // The three activation callbacks are required on iOS; without them watch switching leaves the session inactive.
+    public override void ActivationDidComplete(WCSession session, WCSessionActivationState activationState,
+        NSError? error)
+    {
+        _implementation.OnStateChanged();
+    }
+
+    public override void DidBecomeInactive(WCSession session)
+    {
+    }
+
+    public override void DidDeactivate(WCSession session)
+    {
+        // Apple: re-activate so the session binds to the newly selected Apple Watch.
+        session.ActivateSession();
     }
 
     public override void SessionReachabilityDidChange(WCSession session)

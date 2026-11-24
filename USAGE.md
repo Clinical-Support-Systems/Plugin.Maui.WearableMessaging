@@ -56,9 +56,9 @@ builder.UseWearableMessaging(options =>
 ### iOS (Apple Watch)
 
 #### Requirements
-- Xcode 15+
+- Xcode 26+
 - watchOS 9+
-- iOS deployment target 14.0+
+- iOS deployment target 13.0+
 
 #### Info.plist Configuration
 
@@ -91,7 +91,7 @@ Your app needs the proper entitlements. Create or update `Entitlements.plist`:
 ### Android (Wear OS)
 
 #### Requirements
-- Android SDK 30+
+- Android 7.0 (API 24)+ (`SupportedOSPlatformVersion` 24 or higher)
 - Wear OS 3+
 - Google Play Services
 
