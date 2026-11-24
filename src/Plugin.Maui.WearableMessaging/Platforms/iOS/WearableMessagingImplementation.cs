@@ -228,13 +228,15 @@ public class WearableMessagingImplementation : IWearableMessaging
         var nsDict = ConvertToNativeDictionary(message);
         var timeoutValue = timeout ?? _options.DefaultReplyTimeout;
 
+        // The timeout below may already have completed the task when a late reply or error arrives, and SetResult or
+        // SetException would then throw inside WatchConnectivity's callback.
         _session.SendMessage(nsDict, reply =>
         {
             var replyDict = ConvertFromNativeDictionary(reply);
-            tcs.SetResult(replyDict);
+            tcs.TrySetResult(replyDict);
         }, error =>
         {
-            tcs.SetException(new WearableMessagingException(
+            tcs.TrySetException(new WearableMessagingException(
                 $"Failed to send message: {error.LocalizedDescription}",
                 error.Code.ToString()));
         });
